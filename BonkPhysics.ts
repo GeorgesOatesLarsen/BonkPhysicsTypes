@@ -33,22 +33,27 @@ export interface BonkSwingState {
     p: [number, number]//Point
 }
 
+//These are not really part of normal bonk. My clone works very differently internally.
+//Some of these properties may have analogues in original bonk.
+//Goal of my clone was to perfectly replicate behavior. Internals were subject to change.
+//That does make most of these typedefs useful, though, for understanding bonk state, since bonk state was the input/output format for my clone
 interface BonkDiscTransients {
-    pid : number;
+    pid : number; //Player ID
     deathReason : number;
-    diedThisFrame : boolean;
+    diedThisFrame : boolean;//Did we die this frame?
     radius : number;//It's the radius of the ball, dude
-    charge : number;
+    charge : number;//What is our charge? 0-1000 IIRC
     drawstrength : number;
-    action1 : boolean;
-    action2 : boolean;
-    swingThisFrame : boolean;
+    action1 : boolean;//Action 1 pressed?
+    action2 : boolean;//Action 2 pressed?
+    swingThisFrame : boolean;//Swinging this frame?
     aimangle : number | undefined;//Chaz performs dynamic mid-cycle updates to angular velocity (joy), this is the only way to do that safely.
-    lastHitID? : number;
-    lastHitTime? : number;
-    newSwing? : BonkSwingState;
+    lastHitID? : number;//not used, ID of last hit object, was probably for debugging
+    lastHitTime? : number;//not used, frame on which last collision occurred
+    newSwing? : BonkSwingState;//Initiating a new swing?
 }
 
+//This isn't part of normal bonk IIRC
 interface BonkPhysicsImplicitStates {
     heavyUsesCharge : boolean;
     grapple : boolean;
@@ -60,6 +65,7 @@ interface BonkPhysicsImplicitStates {
     arrows : boolean;
     darrows : boolean;
 }
+
 
 export interface BonkMapSpawn {
     b: boolean,//Blue
@@ -75,15 +81,14 @@ export interface BonkMapSpawn {
     yv: number,//Initial Velocity Y
 }
 
-
 export interface BonkCaptureZone {
     n?: string;//Name
     i: number;//Fixture index
     ty: number;
-    l: number;//Capture Length (seconds in map form, frames in pstate form)
+    l: number;//Capture Length (seconds in map form, frames in physics-state form)
     p: number;//Power / Capture completion
-    o: number;//Owner
-    ot: number;//Owner Team
+    o: number;//Owner (after capture)
+    ot: number;//Owner Team (after capture)
     f: number;//Final countdown -- Jumps to 20 upon capture, decreases by one per frame, on zero, win is executed.
 }
 
@@ -92,8 +97,8 @@ export type BonkJoint = BonkJointBase & (BonkJointFollowsPath | BonkJointGear | 
 
 export interface BonkJointBase {
     type: string;
-    bb: number;//Body B
-    ba: number;//Body A
+    bb: number;//Body B (id)
+    ba: number;//Body A (id)
     d: {
         bf : number;
         cc : boolean;
@@ -204,6 +209,7 @@ export interface BonkShapePolygon {
     a : number;//angle
 }
 
+//Not actually available in game. Based on stubs from source analysis
 export interface BonkShapeChain {
     type : "ch";
     v : (number[])[];//Vertices
@@ -221,7 +227,7 @@ interface BonkFixtureBase {
     np: boolean;//np for No Physics
     fp? : boolean;
     re? : number;//Restitution/bounciness override
-    sh: number;
+    sh: number;//Shape ID
 }
 
 export type BonkBody = BonkBodyBase & (BonkBodyDynamic | BonkBodyKinematic | BonkBodyStationary);
@@ -236,23 +242,23 @@ export interface BonkBodyBase {
     }
     lv : number[],//Linear Velocity
     av : number,//Angular Velocity
-    a : number,
+    a : number,//Angle
     ad : number,
     bu : boolean,
     de: number,
-    f_1: boolean,
-    f_2: boolean,
-    f_3: boolean,
-    f_4: boolean,
-    f_c: number,
-    f_p: boolean,
+    f_1: boolean,//Filter layer 1 (Collision group A?) (collisions)
+    f_2: boolean,//Filter layer 2 (Collision group B?) (collisions)
+    f_3: boolean,//Filter layer 3 (Collision group C?) (collisions)
+    f_4: boolean,//Filter layer 4 (Collision group D?) (collisions)
+    f_c: number,//What collision group are we in? (1-4, A,B,C,D)
+    f_p: boolean,//Collision filter players
     fr: boolean,
-    fric: number,
-    fricp: boolean,
-    fx: number[],
+    fric: number,//Friction value. Negative 
+    fricp: boolean,//Friction with players?
+    fx: number[],//Fixture ID list
     ld: number,
     n?:string,//name
-    re: number,
+    re: number,//"Restitution" -- density, essentially
     bg?: any,
 }
 
